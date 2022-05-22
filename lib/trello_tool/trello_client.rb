@@ -24,7 +24,7 @@ module TrelloTool
     end
 
     def archive_board
-      @archive_board ||= client.find(:boards, extract_id_from_url(ARCHIVE_BOARD_URL))
+      @archive_board ||= client.find(:boards, extract_id_from_url(configuration.archive_board_url))
     end
 
     def archiveable_list_names_with_index

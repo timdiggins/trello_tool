@@ -44,7 +44,7 @@ class TrelloToolThor < Thor
       list = lists_reversed[index]
       break unless list
 
-      list.move_to_board(archive_board)
+      list.move_to_board(client.archive_board)
       say "\r * #{list.name.inspect}#{' ' * 20}\n"
     end
     say
