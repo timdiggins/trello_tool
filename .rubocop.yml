@@ -3,6 +3,17 @@ inherit_from: .rubocop_todo.yml
 AllCops:
   NewCops: enable
 
+Lint/AmbiguousBlockAssociation:
+  Enabled: true
+  Exclude:
+    - "spec/**/*" # https://github.com/rubocop/rubocop/issues/4222
+
+Metrics/BlockLength:
+  IgnoredMethods:
+    - "no_commands" # thor
+  Exclude:
+    - "spec/**/*.rb"
+
 Style/StringLiterals:
   Enabled: true
   EnforcedStyle: double_quotes

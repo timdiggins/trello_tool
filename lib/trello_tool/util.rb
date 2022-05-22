@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module TrelloTool
+  # small utility methods for handling trello urls
   module Util
     def extract_id_from_url(trello_board_url)
       match_data = %r{https://trello.com/b/([a-zA-Z0-9]+)/?.*}.match(trello_board_url)

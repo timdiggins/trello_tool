@@ -1,8 +1,14 @@
 # frozen_string_literal: true
 
+require "trello"
+require "trello_tool/util"
+
 module TrelloTool
   # Wrapped client for trello adapting it to things we need it to do
   class TrelloClient < SimpleDelegator
+    include TrelloTool::Util
+    attr_reader :client, :configuration
+
     # @param configuration[TrelloTool::Configuration]
     def initialize(configuration)
       @configuration = configuration
