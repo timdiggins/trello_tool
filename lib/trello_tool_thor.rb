@@ -68,7 +68,8 @@ class TrelloToolThor < Thor
     end
     say
     health.each_issue_with_severity do |issue, severity|
-      say(format("%-13<severity>s %<issue>s", severity: "#{severity}:", issue: issue))
+      say(format("%-15s", "#{severity}:"), Thor::Shell::Color::RED, false)
+      say(issue)
     end
   end
 
