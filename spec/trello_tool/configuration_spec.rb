@@ -4,36 +4,36 @@ require "fileutils"
 require File.expand_path("../../lib/trello_tool/configuration.rb", __dir__)
 
 RSpec.describe TrelloTool::Configuration do
-  let(:defaults) {
+  let(:defaults) do
     {
       main_board_url: nil,
       archive_board_url: nil,
       next_version_list_name: "next version",
       todo_list_name: "TO DO",
       doing_list_name: "-- DOING --",
-      initial_list_names: ["Triage", "Reference"],
-      done_list__names: ["Done"],
+      initial_list_names: %w[Triage Reference],
+      done_list_names: ["Done"],
       version_template: "v%s",
       month_template: "[%s]",
       too_many_doing: 2,
       too_many_todo: 10
     }
-  }
-  let(:configured) {
+  end
+  let(:configured) do
     {
       main_board_url: "somewhere-over-the-rainbow",
       archive_board_url: "unconfigured",
       next_version_list_name: "Prochaine version",
       todo_list_name: "A faire",
       doing_list_name: "En cours",
-      initial_list_names: nil,
-      done_list__names: ["Accomplis"],
+      initial_list_names: [],
+      done_list_names: ["Accomplis"],
       version_template: "v-%s",
       month_template: "[ %s ]",
       too_many_doing: 10,
-      too_many_todo: 14,
+      too_many_todo: 14
     }
-  }
+  end
 
   it "can generate an empty configuration" do
     config = TrelloTool::Configuration.new
@@ -62,6 +62,8 @@ RSpec.describe TrelloTool::Configuration do
   it "can output to a standard folder" do
     dir = ensure_tmp_dir
     config = TrelloTool::Configuration.new(dir)
-    expect { config.generate }.to change { File.exist?(File.join(dir, "trello_tool.yml")) }.from(be_falsey).to(be_truthy)
+    expect { config.generate }.to change {
+                                    File.exist?(File.join(dir, "trello_tool.yml"))
+                                  }.from(be_falsey).to(be_truthy)
   end
 end

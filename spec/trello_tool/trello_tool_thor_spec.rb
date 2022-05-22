@@ -21,18 +21,20 @@ RSpec.describe "TrelloToolThor" do
       expect(subject.send(:extract_id_from_url, "https://trello.com/b/dqz4FA0K/fnc-focus")).to eq("dqz4FA0K")
     end
     it "raises" do
-      expect { subject.send(:extract_id_from_url, "https://wherever.com/any-old-rubbish") }.to raise_error(/any-old-rubbish/)
+      expect do
+        subject.send(:extract_id_from_url, "https://wherever.com/any-old-rubbish")
+      end.to raise_error(/any-old-rubbish/)
     end
   end
 
   describe "#config" do
-    let(:config_filepath) { File.join(@target_dir, TrelloTool::Configuration::FILE_NAME) }
+    let(:config_filepath) { File.join(@target_dir, TrelloTool::DefaultConfiguration::FILE_NAME) }
     context "with no config file" do
       before do
         File.unlink(config_filepath)
       end
       it "outputs file" do
-        expect { subject.config }.to change { File.exists?(config_filepath) }.from(be_falsey)
+        expect { subject.config }.to change { File.exist?(config_filepath) }.from(be_falsey)
       end
       it "mentions" do
         expect { subject.config }.to output(/Generated/).to_stdout
@@ -40,7 +42,7 @@ RSpec.describe "TrelloToolThor" do
     end
     context "with config file" do
       before do
-        FileUtils.copy_file(fixture_path("root_dir_bad","trello_tool.yml"),config_filepath)
+        FileUtils.copy_file(fixture_path("root_dir_bad", "trello_tool.yml"), config_filepath)
       end
       it "doesn't output file" do
         expect { subject.config }.not_to change { TrelloTool::Configuration.new(@target_dir).to_h }

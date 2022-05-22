@@ -51,7 +51,7 @@ You can also configure some defaults
 * `todo_list_name` = "TO DO"
 * `doing_list_name` = "-- DOING --"
 * `initial_list_names` = ["Triage", "Reference"]
-* `done_list__names` = ["Done"]
+* `done_list_names` = ["Done"]
 * `version_template` = "v%s"
 * `month_template` = "[%s]"
 * `too_many_doing` = 2 

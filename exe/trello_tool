@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
-$LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
-require File.expand_path('../lib/trello_tool/trello_tool_thor', File.dirname(__FILE__))
+# frozen_string_literal: true
+
+$LOAD_PATH << File.expand_path("../lib", File.dirname(__FILE__))
+require File.expand_path("../lib/trello_tool/trello_tool_thor", File.dirname(__FILE__))
 
 TrelloToolThor.start

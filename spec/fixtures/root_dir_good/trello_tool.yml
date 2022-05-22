@@ -7,7 +7,7 @@ doing_list_name: "-- DOING --"
 initial_list_names:
 - Triage
 - Reference
-done_list__names:
+done_list_names:
 - Done
 version_template: v%s
 month_template: "[%s]"

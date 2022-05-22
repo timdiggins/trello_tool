@@ -5,7 +5,7 @@ next_version_list_name: Prochaine version
 todo_list_name: A faire
 doing_list_name: "En cours"
 initial_list_names:
-done_list__names:
+done_list_names:
   - Accomplis
 version_template: v-%s
 month_template: "[ %s ]"

@@ -24,9 +24,8 @@ module SpecUtils
   end
 
   def fixture_path(*dir_names)
-    target = File.join(File.expand_path("./fixtures", __dir__), *dir_names)
+    File.join(File.expand_path("./fixtures", __dir__), *dir_names)
     # raise "Doesn't exist: #{target}" unless Dir.exist?(target)
-    target
   end
 end
 
