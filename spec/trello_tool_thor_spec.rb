@@ -9,7 +9,7 @@ RSpec.describe "TrelloToolThor" do
     @target_dir = ensure_tmp_dir
     FileUtils.cp_r(fixture_path("root_dir_partial/."), @target_dir)
     Dir.chdir(@target_dir) do
-      load File.expand_path("../../lib/trello_tool/trello_tool_thor.rb", __dir__)
+      load File.expand_path("../lib/trello_tool_thor.rb", __dir__)
       example.run
     end
   end

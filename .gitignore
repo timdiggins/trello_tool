@@ -11,3 +11,6 @@ Gemfile.lock
 
 # rspec failure tracking
 .rspec_status
+
+# local config for manual testing
+trello_tool.yml

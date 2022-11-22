@@ -4,6 +4,23 @@ require "fileutils"
 require File.expand_path("../../lib/trello_tool/configuration.rb", __dir__)
 
 RSpec.describe TrelloTool::Configuration do
+  around do |example|
+
+    default_configuration_location = File.join(File.expand_path("../..", __dir__), TrelloTool::DefaultConfiguration::FILE_NAME)
+    moved_location = nil
+    if File.exist?(default_configuration_location)
+      moved_location = File.join(File.expand_path("../../tmp", __dir__), TrelloTool::DefaultConfiguration::FILE_NAME)
+      puts "moving from #{default_configuration_location} to #{moved_location}"
+      FileUtils.mv(default_configuration_location, moved_location)
+    else
+      puts "doesn't exist: #{default_configuration_location}"
+    end
+    example.run
+    if moved_location
+      FileUtils.mv(moved_location, default_configuration_location)
+    end
+  end
+
   let(:defaults) do
     {
       main_board_url: nil,
@@ -38,7 +55,7 @@ RSpec.describe TrelloTool::Configuration do
   it "can generate an empty configuration" do
     config = TrelloTool::Configuration.new
     defaults.each do |k, v|
-      expect(config.send(k)).to eq(v)
+      expect(config.send(k)).to eq(v), "#{k}: expected #{v.inspect}, but got #{config.send(k)}"
     end
     expect(config.to_h).to include(**defaults)
     expect(config.to_h.keys).to contain_exactly(*defaults.keys)
