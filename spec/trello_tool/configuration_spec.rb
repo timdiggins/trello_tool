@@ -38,7 +38,7 @@ RSpec.describe TrelloTool::Configuration do
   it "can generate an empty configuration" do
     config = TrelloTool::Configuration.new
     defaults.each do |k, v|
-      expect(config.send(k)).to eq(v)
+      expect(config.send(k)).to eq(v), "#{k}: expected #{v.inspect}, but got #{config.send(k)}"
     end
     expect(config.to_h).to include(**defaults)
     expect(config.to_h.keys).to contain_exactly(*defaults.keys)
