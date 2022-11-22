@@ -28,8 +28,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Uncomment to register a new dependency of your gem
-  spec.add_dependency "ruby-trello", "~> 3.1"
+  spec.add_dependency "ruby-trello"
   spec.add_dependency "thor"
   spec.add_development_dependency "rubocop", "= 1.27.0"
   spec.metadata["rubygems_mfa_required"] = "true"
