@@ -59,7 +59,7 @@ class TrelloToolThor < Thor
     archive_last(client.archiveable_list_names_with_index.length) if yes?("archive them?")
   end
 
-  desc "health", "checks whether focus is 'healthy'"
+  desc "health", "checks whether main board is 'healthy'"
 
   def health
     health = TrelloTool::Health.new(client.main_board, configuration)
@@ -73,7 +73,7 @@ class TrelloToolThor < Thor
     end
   end
 
-  desc "lists (board_url)", "prints out lists in a board (defaults to focus board)"
+  desc "lists (BOARD_URL)", "prints out lists in a board (defaults to main board)"
 
   def lists(url = configuration.main_board_url)
     board = client.find(:boards, extract_id_from_url(url))
