@@ -59,7 +59,7 @@ class TrelloToolThor < Thor
     archive_last(client.archiveable_list_names_with_index.length) if yes?("archive them?")
   end
 
-  desc "health", "checks whether focus is 'healthy'"
+  desc "health", "checks whether main board is 'healthy'"
 
   def health
     health = TrelloTool::Health.new(client.main_board, configuration)
@@ -73,7 +73,7 @@ class TrelloToolThor < Thor
     end
   end
 
-  desc "lists (board_url)", "prints out lists in a board (defaults to focus board)"
+  desc "lists (BOARD_URL)", "prints out lists in a board (defaults to main board)"
 
   def lists(url = configuration.main_board_url)
     board = client.find(:boards, extract_id_from_url(url))
@@ -82,6 +82,23 @@ class TrelloToolThor < Thor
     say
     board.lists.each do |list|
       say "* #{list.name}"
+    end
+  end
+
+  desc "summarize_as_md (LIST_NAME (BOARD_URL))", "prints out markdown summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
+  def summarize_as_md(list_name = configuration.todo_list_name, url = configuration.main_board_url)
+    board = client.find(:boards, extract_id_from_url(url))
+    list = board.lists.detect{|list| list.name == list_name}
+    unless list
+      say("couldn't find list called #{list_name.inspect}. found:")
+      lists(url)
+      return
+    end
+
+    cards = list.cards
+    say "#{list.name} (#{cards.length} cards)"
+    list.cards.each do |card|
+      say "* #{card.name}"
     end
   end
 
