@@ -5,7 +5,6 @@ require File.expand_path("../../lib/trello_tool/configuration.rb", __dir__)
 
 RSpec.describe TrelloTool::Configuration do
   around do |example|
-
     default_configuration_location = File.join(File.expand_path("../..", __dir__), TrelloTool::DefaultConfiguration::FILE_NAME)
     moved_location = nil
     if File.exist?(default_configuration_location)
@@ -16,9 +15,7 @@ RSpec.describe TrelloTool::Configuration do
       puts "doesn't exist: #{default_configuration_location}"
     end
     example.run
-    if moved_location
-      FileUtils.mv(moved_location, default_configuration_location)
-    end
+    FileUtils.mv(moved_location, default_configuration_location) if moved_location
   end
 
   let(:defaults) do

@@ -85,26 +85,49 @@ class TrelloToolThor < Thor
     end
   end
 
-  desc "summarize_as_md (LIST_NAME (BOARD_URL))", "prints out markdown summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
+  desc "summarize_as_md (LIST_NAME (BOARD_URL))",
+       "prints out markdown summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
+
   def summarize_as_md(list_name = configuration.todo_list_name, url = configuration.main_board_url)
     board = client.find(:boards, extract_id_from_url(url))
-    list = board.lists.detect{|list| list.name == list_name}
-    unless list
-      say("couldn't find list called #{list_name.inspect}. found:")
-      lists(url)
-      return
-    end
+    list = find_list_by_list_name(board, list_name)
+    return unless list
 
     cards = list.cards
-    say "#{list.name} (#{cards.length} cards)"
+    say "\n# #{list.name} (#{cards.length} cards)\n\n"
     list.cards.each do |card|
-      say "* #{card.name}"
+      say "* [#{card.name}](#{card.url})"
     end
+    say "\n"
+  end
+
+  desc "summarize_as_urls (LIST_NAME (BOARD_URL))",
+       "prints out urls summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
+  def summarize_as_urls(list_name = configuration.todo_list_name, url = configuration.main_board_url)
+    board = client.find(:boards, extract_id_from_url(url))
+    list = find_list_by_list_name(board, list_name)
+    return unless list
+
+    cards = list.cards
+    say "\n#{list.name} (#{cards.length} cards)\n\n"
+    list.cards.each do |card|
+      say card.url
+    end
+    say "\n"
   end
 
   private
 
   def client
     TrelloTool::TrelloClient.new(configuration)
+  end
+
+  def find_list_by_list_name(board, list_name)
+    list = board.lists.detect { |l| l.name == list_name }
+    return list if list
+
+    say("couldn't find list called #{list_name.inspect}. found:")
+    lists(url)
+    nil
   end
 end
