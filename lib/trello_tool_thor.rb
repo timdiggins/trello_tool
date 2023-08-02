@@ -85,6 +85,23 @@ class TrelloToolThor < Thor
     end
   end
 
+  desc "summarize_as_md (LIST_NAME (BOARD_URL))", "prints out markdown summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
+  def summarize_as_md(list_name = configuration.todo_list_name, url = configuration.main_board_url)
+    board = client.find(:boards, extract_id_from_url(url))
+    list = board.lists.detect{|list| list.name == list_name}
+    unless list
+      say("couldn't find list called #{list_name.inspect}. found:")
+      lists(url)
+      return
+    end
+
+    cards = list.cards
+    say "#{list.name} (#{cards.length} cards)"
+    list.cards.each do |card|
+      say "* #{card.name}"
+    end
+  end
+
   private
 
   def client
