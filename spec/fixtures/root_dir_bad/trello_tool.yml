@@ -8,6 +8,6 @@ initial_list_names:
 done_list_names:
   - Accomplis
 version_template: v-%s
-month_template: "[ %s ]"
+divider_template: "[ %s ]"
 too_many_doing: 10
 too_many_todo: 14

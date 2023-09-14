@@ -52,8 +52,8 @@ module TrelloTool
           symbols_and_colours << ["️d", Thor::Shell::Color::BOLD]
         elsif configuration.expected_list_names.include?(list.name)
           symbols_and_colours << [".", Thor::Shell::Color::CYAN]
-        elsif configuration.month_list_names.include?(list.name)
-          symbols_and_colours << ["M", Thor::Shell::Color::CYAN]
+        elsif configuration.divider_list_matcher.match?(list.name)
+          symbols_and_colours << ["|", Thor::Shell::Color::CYAN]
         elsif configuration.version_list_matcher.match?(list.name)
           symbols_and_colours << ["v", Thor::Shell::Color::CYAN]
         else
