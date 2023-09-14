@@ -28,7 +28,7 @@ RSpec.describe TrelloTool::Configuration do
       initial_list_names: %w[Triage Reference],
       done_list_names: ["Done"],
       version_template: "v%s",
-      month_template: "[%s]",
+      divider_template: "[%s]",
       too_many_doing: 2,
       too_many_todo: 10
     }
@@ -43,7 +43,7 @@ RSpec.describe TrelloTool::Configuration do
       initial_list_names: [],
       done_list_names: ["Accomplis"],
       version_template: "v-%s",
-      month_template: "[ %s ]",
+      divider_template: "[ %s ]",
       too_many_doing: 10,
       too_many_todo: 14
     }
@@ -77,7 +77,37 @@ RSpec.describe TrelloTool::Configuration do
     dir = ensure_tmp_dir
     config = TrelloTool::Configuration.new(dir)
     expect { config.generate }.to change {
-                                    File.exist?(File.join(dir, "trello_tool.yml"))
-                                  }.from(be_falsey).to(be_truthy)
+      File.exist?(File.join(dir, "trello_tool.yml"))
+    }.from(be_falsey).to(be_truthy)
+  end
+
+  describe "#month_template= (deprecated)" do
+    subject { TrelloTool::Configuration.new }
+    it "treats as divider_template" do
+      expect { subject.month_template = "-- %s --" }.to change { subject.divider_template }.to "-- %s --"
+    end
+    it "outputs deprecated" do
+      expect do
+        subject.month_template = "-- %s --"
+      end.to output(/deprecated/i).to_stdout
+    end
+  end
+
+  describe "#version_list_matcher" do
+    subject { TrelloTool::Configuration.new }
+    it "works" do
+      expect(subject.version_list_matcher.match?("v1.2.3")).to be_truthy
+      expect(subject.version_list_matcher.match?("flong")).to be_falsey
+    end
+  end
+
+  describe "#divider_list_matcher" do
+    subject { TrelloTool::Configuration.new }
+    it "works" do
+      expect(subject.divider_list_matcher.match?("[ Flong ]")).to be_truthy
+      expect(subject.divider_list_matcher.match?("[v1.2.3]")).to be_truthy
+      expect(subject.divider_list_matcher.match?("v1.2.3")).to be_falsey
+      expect(subject.divider_list_matcher.match?("flong")).to be_falsey
+    end
   end
 end

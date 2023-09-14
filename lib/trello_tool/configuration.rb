@@ -16,7 +16,7 @@ module TrelloTool
       initial_list_names: %w[Triage Reference],
       done_list_names: ["Done"],
       version_template: "v%s",
-      month_template: "[%s]",
+      divider_template: "[%s]",
       too_many_doing: 2,
       too_many_todo: 10
     }.freeze
@@ -51,16 +51,21 @@ module TrelloTool
                                                      doing_list_name] + done_list_names + [next_version_list_name]
     end
 
-    def month_list_names
-      @month_list_names ||= Date::MONTHNAMES.compact.map(&method(:month_list_name))
+    def divider_list_matcher
+      @divider_list_matcher ||= begin
+        pieces = divider_template.split(/(%s)/)
+        pieces = pieces.map { |piece| piece == "%s" ? ".+" : Regexp.escape(piece) }
+        Regexp.new("\\A#{pieces.join}\\Z")
+      end
     end
 
     def version_list_matcher
       @version_list_matcher ||= Regexp.new("\\A#{format(version_template, '\d+[.]\d+[.]\d+')}")
     end
 
-    def month_list_name(name)
-      month_template % name.upcase
+    def month_template=(template)
+      self.divider_template = template
+      puts "DEPRECATED: use divider_template instead of month_template"
     end
 
     protected

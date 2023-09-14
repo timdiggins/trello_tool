@@ -31,7 +31,7 @@ module TrelloTool
       @archiveable_list_names_with_index ||= [].tap do |lists|
         all_lists = main_board.lists
         all_lists.reverse.each_with_index do |list, right_index|
-          if (month_list?(list) && right_index.zero?) || version_list?(list) # rubocop:disable Style/GuardClause
+          if (divider_list?(list) && right_index.zero?) || version_list?(list) # rubocop:disable Style/GuardClause
             left_index = all_lists.length - right_index - 1
             lists << [list.name, left_index]
           else
@@ -43,8 +43,8 @@ module TrelloTool
 
     protected
 
-    def month_list?(list)
-      configuration.month_list_names.include?(list.name)
+    def divider_list?(list)
+      configuration.divider_list_matcher.match?(list.name)
     end
 
     def version_list?(list)

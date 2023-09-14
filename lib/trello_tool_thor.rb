@@ -7,6 +7,7 @@ require "trello_tool/trello_client"
 require "trello_tool/util"
 
 # The thor class
+# rubocop:disable Metrics/ClassLength
 class TrelloToolThor < Thor
   include TrelloTool::Util
 
@@ -68,8 +69,11 @@ class TrelloToolThor < Thor
     end
     say
     health.each_issue_with_severity do |issue, severity|
-      say(format("%-15s", "#{severity}:"), Thor::Shell::Color::RED, false)
+      say(format("%-20s", "#{severity}:"), Thor::Shell::Color::RED, false)
       say(issue)
+    end
+    health.each_expected_list_with_length do |list_name, length|
+      say(" * #{list_name} (#{length})")
     end
   end
 
@@ -131,3 +135,4 @@ class TrelloToolThor < Thor
     nil
   end
 end
+# rubocop:enable Metrics/ClassLength

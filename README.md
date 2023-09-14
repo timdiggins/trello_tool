@@ -12,7 +12,7 @@ The tool envisages a main trello board with the following lists:
 * (at least one "done" list -- "Done" by default)
 * "Next version" (for things that have been merged but not deployed)
 * (a set of lists named after the version numbers e.g. "v1.2.3", "v1.2.2", etc)
-* (a list named after the current (or last) month, e.g. "[ December ]")
+* (a divider list starting with `[` and ending with `]` (which might be empty or contain chores done during that time) named after a month or a sprint, e.g. "[ December ]" or "[ Sprint 1st Sep - 13th Sep ]" etc)
 
 And another board where you archive these lists as they become old
 
@@ -53,7 +53,7 @@ You can also configure some defaults
 * `initial_list_names` = ["Triage", "Reference"]
 * `done_list_names` = ["Done"]
 * `version_template` = "v%s"
-* `month_template` = "[%s]"
+* `divider_template` = "[%s]"
 * `too_many_doing` = 2 
 * `too_many_todo` = 10
 
