@@ -103,7 +103,8 @@ class TrelloToolThor < Thor
     next_version_list.name = version
     next_version_list.save
     client.authorized do
-      Trello::List.create(name: configuration.next_version_list_name, board_id: client.main_board.id, pos: find_pos_before_list(client.main_board, next_version_list))
+      Trello::List.create(name: configuration.next_version_list_name, board_id: client.main_board.id,
+                          pos: find_pos_before_list(client.main_board, next_version_list))
     end
   end
 
