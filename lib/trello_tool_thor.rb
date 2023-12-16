@@ -89,6 +89,24 @@ class TrelloToolThor < Thor
     end
   end
 
+  desc "release (VERSION)",
+       "rename next_version to VERSION and create next_version. If VERSION isn't specified use whatever is in ./.RELEASE_NEW_VERSION"
+
+  def release(version = nil)
+    version ||= File.exist?(".RELEASE_NEW_VERSION") && File.read(".RELEASE_NEW_VERSION").strip
+    unless version
+      say("Usage: release VERSION # or put version number in .RELEASE_NEW_VERSION")
+      return
+    end
+
+    next_version_list = client.next_version_list
+    next_version_list.name = version
+    next_version_list.save
+    client.authorized do
+      Trello::List.create(name: configuration.next_version_list_name, board_id: client.main_board.id, pos: find_pos_before_list(client.main_board, next_version_list))
+    end
+  end
+
   desc "summarize_as_md (LIST_NAME (BOARD_URL))",
        "prints out markdown summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
 
@@ -124,15 +142,6 @@ class TrelloToolThor < Thor
 
   def client
     TrelloTool::TrelloClient.new(configuration)
-  end
-
-  def find_list_by_list_name(board, list_name)
-    list = board.lists.detect { |l| l.name == list_name }
-    return list if list
-
-    say("couldn't find list called #{list_name.inspect}. found:")
-    lists(url)
-    nil
   end
 end
 # rubocop:enable Metrics/ClassLength

@@ -19,6 +19,18 @@ module TrelloTool
       super(@client)
     end
 
+    def authorized(&block)
+      Trello.configure do |config|
+        config.developer_public_key = ENV["TRELLO_DEVELOPER_PUBLIC_KEY"]
+        config.member_token = ENV["TRELLO_MEMBER_TOKEN"]
+      end
+      block.call
+      Trello.configure do |config|
+        config.developer_public_key = nil
+        config.member_token = nil
+      end
+    end
+
     def main_board
       @main_board ||= client.find(:boards, extract_id_from_url(configuration.main_board_url))
     end
@@ -39,6 +51,10 @@ module TrelloTool
           end
         end
       end
+    end
+
+    def next_version_list
+      @next_version_list ||= find_list_by_list_name(main_board, configuration.next_version_list_name)
     end
 
     protected
