@@ -11,3 +11,6 @@ jobs:
             gem install bundler -v 2.3.5
             bundle install
             bundle exec rake
+      - run:
+          name: Rubocop
+          command: bundle exec rubocop --format quiet
