@@ -30,6 +30,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "ruby-trello"
   spec.add_dependency "thor"
-  spec.add_development_dependency "rubocop", "= 1.27.0"
   spec.metadata["rubygems_mfa_required"] = "true"
 end

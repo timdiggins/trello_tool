@@ -9,7 +9,7 @@ Lint/AmbiguousBlockAssociation:
     - "spec/**/*" # https://github.com/rubocop/rubocop/issues/4222
 
 Metrics/BlockLength:
-  IgnoredMethods:
+  AllowedMethods:
     - "no_commands" # thor
   Exclude:
     - "spec/**/*.rb"
