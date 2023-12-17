@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Tool for doing basic things to a dev trello using the api."
   spec.homepage = "https://github.com/timdiggins/trello_tool"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 3.0.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -30,6 +30,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "ruby-trello"
   spec.add_dependency "thor"
-  spec.add_development_dependency "rubocop", "= 1.27.0"
   spec.metadata["rubygems_mfa_required"] = "true"
 end

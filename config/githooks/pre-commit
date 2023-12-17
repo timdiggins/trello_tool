@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "checking rubocop (committing files only)"
+git diff --cached --name-only | xargs ls | xargs rubocop --force-exclusion

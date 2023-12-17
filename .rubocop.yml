@@ -2,14 +2,14 @@ inherit_from: .rubocop_todo.yml
 
 AllCops:
   NewCops: enable
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.0
 Lint/AmbiguousBlockAssociation:
   Enabled: true
   Exclude:
     - "spec/**/*" # https://github.com/rubocop/rubocop/issues/4222
 
 Metrics/BlockLength:
-  IgnoredMethods:
+  AllowedMethods:
     - "no_commands" # thor
   Exclude:
     - "spec/**/*.rb"
