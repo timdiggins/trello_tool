@@ -39,6 +39,7 @@ module TrelloTool
       @archive_board ||= client.find(:boards, extract_id_from_url(configuration.archive_board_url))
     end
 
+    # @return [Array] of list names with left index, ordered from right
     def archiveable_list_names_with_index
       @archiveable_list_names_with_index ||= [].tap do |lists|
         all_lists = main_board.lists
@@ -60,11 +61,11 @@ module TrelloTool
     protected
 
     def divider_list?(list)
-      configuration.divider_list_matcher.match?(list.name)
+      configuration.divider_list_name?(list.name)
     end
 
     def version_list?(list)
-      configuration.version_list_matcher.match?(list.name)
+      configuration.version_list_name?(list.name)
     end
   end
 end
