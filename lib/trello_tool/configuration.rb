@@ -51,12 +51,20 @@ module TrelloTool
                                                      doing_list_name] + done_list_names + [next_version_list_name]
     end
 
+    def divider_list_name?(list_name)
+      divider_list_matcher.match?(list_name)
+    end
+
     def divider_list_matcher
       @divider_list_matcher ||= begin
         pieces = divider_template.split(/(%s)/)
         pieces = pieces.map { |piece| piece == "%s" ? ".+" : Regexp.escape(piece) }
         Regexp.new("\\A#{pieces.join}\\Z")
       end
+    end
+
+    def version_list_name?(list_name)
+      version_list_matcher.match?(list_name)
     end
 
     def version_list_matcher

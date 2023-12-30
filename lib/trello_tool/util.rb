@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "trello"
+
 module TrelloTool
   # small utility methods for handling trello urls
   module Util
@@ -19,20 +21,19 @@ module TrelloTool
       list = board.lists.detect { |l| l.name == list_name }
       return list if list
 
-      say("couldn't find list called #{list_name.inspect}. found:")
-      lists(url)
+      puts "couldn't find list called #{list_name.inspect}. found: #{board.lists.map(&:name).map(&:inspect).join(', ')}."
       nil
     end
 
     def find_pos_before_list(board, target_list)
-      previous_list_pos = nil
+      previous_list_pos = 0
       board.lists.each do |this_list|
         return previous_list_pos && ((target_list.pos + previous_list_pos) / 2) if this_list == target_list
 
         previous_list_pos = this_list.pos
       end
 
-      say("couldn't find list")
+      puts "couldn't find list"
       nil
     end
   end
