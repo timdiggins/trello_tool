@@ -136,7 +136,8 @@ class TrelloToolThor < Thor
     cards = list.cards
     say "\n# #{list.name} (#{cards.length} cards)\n\n"
     list.cards.each do |card|
-      say "* #{card.name} #{card.url}"
+      labels = card.labels.map { |label| "[#{label.name}]" }.join(" ")
+      say "* #{card.name} #{labels}\n  #{card.url}"
       card.attachments.each do |attachment|
         next unless (url = attachment.url)
         next if %w[pdf png jpg].include?(url.split(".").last&.downcase)
