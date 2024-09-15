@@ -124,6 +124,29 @@ class TrelloToolThor < Thor
     say "\n"
   end
 
+  desc "summarize_as_md_long (LIST_NAME (BOARD_URL))",
+       "prints out markdown summarizing all cards in a list in a board" \
+       "(defaults to 'to do' list of main board) -- includes attachment urls"
+
+  def summarize_as_md_long(list_name = configuration.todo_list_name, url = configuration.main_board_url)
+    board = client.find(:boards, extract_id_from_url(url))
+    list = find_list_by_list_name(board, list_name)
+    return unless list
+
+    cards = list.cards
+    say "\n# #{list.name} (#{cards.length} cards)\n\n"
+    list.cards.each do |card|
+      labels = card.labels.map { |label| "[#{label.name}]" }.join(" ")
+      say "* #{card.name} #{labels}\n  #{card.url}"
+      card.attachments.each do |attachment|
+        next unless (url = attachment.url)
+        next if %w[pdf png jpg].include?(url.split(".").last&.downcase)
+
+        say "  - #{url}"
+      end
+    end
+    say "\n"
+  end
   desc "summarize_as_urls (LIST_NAME (BOARD_URL))",
        "prints out urls summarizing all cards in a list in a board (defaults to 'to do' list of main board)"
   def summarize_as_urls(list_name = configuration.todo_list_name, url = configuration.main_board_url)
