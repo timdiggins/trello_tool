@@ -14,6 +14,13 @@ module TrelloTool
       match_data[1]
     end
 
+    # @param card_id_or_url [String] a card id or a https://trello.com/c/ID/description url
+    # @return [String] the card id
+    def extract_card_id(card_id_or_url)
+      match_data = %r{\Ahttps://trello.com/c/([a-zA-Z0-9]+)/?.*}.match(card_id_or_url)
+      match_data ? match_data[1] : card_id_or_url
+    end
+
     # @param board [Trello::Board]
     # @param list_name [String]
     # @return [Trello::List]

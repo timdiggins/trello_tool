@@ -3,7 +3,11 @@
 module TrelloTool
   # Health analysis of a board
   class Health
-    attr_reader :board, :configuration, :symbols_and_colours, :unexpected, :expected_lists
+    # @return [Trello::Board]
+    attr_reader :board
+    # @return [TrelloTool::Configuration]
+    attr_reader :configuration
+    attr_reader :symbols_and_colours, :unexpected, :expected_lists
 
     def initialize(board, configuration)
       @board = board
