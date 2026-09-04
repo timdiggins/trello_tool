@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "thor"
 require "trello_tool/configuration"
 require "trello_tool/health"
@@ -89,6 +90,14 @@ class TrelloToolThor < Thor
     end
   end
 
+  desc "card CARD_ID_OR_URL",
+       "prints out a card as json (title, description, url, checklists, attachment urls)"
+
+  def card(card_id_or_url)
+    card = client.find_card(extract_card_id(card_id_or_url))
+    say JSON.pretty_generate(card_as_hash(card))
+  end
+
   desc "release (VERSION)",
        "rename next_version to VERSION and create next_version. If VERSION isn't specified use whatever is in ./.RELEASE_NEW_VERSION"
 
@@ -166,6 +175,29 @@ class TrelloToolThor < Thor
 
   def client
     TrelloTool::TrelloClient.new(configuration)
+  end
+
+  # @param card [Trello::Card]
+  # @return [Hash]
+  def card_as_hash(card)
+    {
+      title: card.name,
+      description: card.desc,
+      url: card.url,
+      checklists: card.checklists.map { |checklist| checklist_as_hash(checklist) },
+      attachment_urls: card.attachments.map(&:url)
+    }
+  end
+
+  # @param checklist [Trello::Checklist]
+  # @return [Hash]
+  def checklist_as_hash(checklist)
+    {
+      name: checklist.name,
+      items: checklist.check_items.map do |item|
+        { name: item["name"], complete: item["state"] == "complete" }
+      end
+    }
   end
 end
 # rubocop:enable Metrics/ClassLength

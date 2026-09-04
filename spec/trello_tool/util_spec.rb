@@ -11,6 +11,18 @@ RSpec.describe TrelloTool::Util do
 
   subject { subject_klass.new }
 
+  describe "#extract_card_id" do
+    it "extracts id from a card url" do
+      expect(subject.send(:extract_card_id, "https://trello.com/c/aBcD1234/99-some-card-title")).to eq("aBcD1234")
+    end
+    it "extracts id from a card url without a description" do
+      expect(subject.send(:extract_card_id, "https://trello.com/c/aBcD1234")).to eq("aBcD1234")
+    end
+    it "passes through a plain id" do
+      expect(subject.send(:extract_card_id, "aBcD1234")).to eq("aBcD1234")
+    end
+  end
+
   describe "#find_list_by_list_name" do
     let(:board) { instance_double(Trello::Board, lists: lists) }
     context "with a match" do

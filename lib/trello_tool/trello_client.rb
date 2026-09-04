@@ -54,6 +54,12 @@ module TrelloTool
       end
     end
 
+    # @param card_id [String]
+    # @return [Trello::Card]
+    def find_card(card_id)
+      client.find(:cards, card_id)
+    end
+
     def next_version_list
       @next_version_list ||= find_list_by_list_name(main_board, configuration.next_version_list_name)
     end
