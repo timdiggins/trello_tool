@@ -43,4 +43,53 @@ RSpec.describe TrelloTool::TrelloClient do
       end
     end
   end
+
+  describe "cards" do
+    let(:trello_client) { TrelloTool::TrelloClient.new(configuration) }
+    let(:board) { instance_double(Trello::Board, id: "b1") }
+    let(:list) { instance_double(Trello::List, id: "l1") }
+    let(:card) { instance_double(Trello::Card, id: "c1") }
+
+    # what Trello::Client#get / #post return: a response, whose body is the json
+    def response(data)
+      Trello::Response.new(200, {}, JSON.generate(data))
+    end
+
+    it "searches the board's cards, leaving out archived ones" do
+      expect(trello_client.client).to receive(:get)
+        .with("/search", hash_including("query" => "snitch is:open", "idBoards" => "b1", "modelTypes" => "cards", "cards_limit" => "50"))
+        .and_return(response("cards" => [{ "name" => "open", "closed" => false }, { "name" => "archived", "closed" => true }]))
+      expect(trello_client.search_cards(board, "snitch is:open")).to eq([{ "name" => "open", "closed" => false }])
+    end
+
+    it "lists the board's visible cards in one request" do
+      expect(trello_client.client).to receive(:get).with("/boards/b1/cards/visible", "fields" => "name,url,idList,labels,closed")
+                                                   .and_return(response([{ "name" => "a card" }]))
+      expect(trello_client.open_cards(board)).to eq([{ "name" => "a card" }])
+    end
+
+    it "creates a card at the bottom of a list, or the top, with labels" do
+      expect(trello_client.client).to receive(:post).with("/cards", { name: "A card", desc: "", idList: "l1", pos: "bottom" })
+                                                    .and_return(response("id" => "c1", "url" => "https://trello.com/c/x"))
+      expect(trello_client.create_card(list, title: "A card")).to eq("id" => "c1", "url" => "https://trello.com/c/x")
+
+      expect(trello_client.client).to receive(:post)
+        .with("/cards", { name: "A card", desc: "why", idList: "l1", pos: "top", idLabels: "lab1,lab2" }).and_return(response({}))
+      trello_client.create_card(list, title: "A card", description: "why", top: true, label_ids: %w[lab1 lab2])
+    end
+
+    it "sets a check item's state" do
+      expect(trello_client.client).to receive(:put).with("/cards/c1/checkItem/i1", { state: "complete" })
+      trello_client.set_check_item_state(card, { "id" => "i1" }, complete: true)
+      expect(trello_client.client).to receive(:put).with("/cards/c1/checkItem/i1", { state: "incomplete" })
+      trello_client.set_check_item_state(card, { "id" => "i1" }, complete: false)
+    end
+
+    it "moves a card to a list and position, or just repositions it" do
+      expect(trello_client.client).to receive(:put).with("/cards/c1", { pos: "top", idList: "l1" })
+      trello_client.move_card(card, position: "top", list: list)
+      expect(trello_client.client).to receive(:put).with("/cards/c1", { pos: "bottom" })
+      trello_client.move_card(card, position: "bottom")
+    end
+  end
 end

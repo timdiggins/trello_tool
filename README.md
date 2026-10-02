@@ -56,6 +56,7 @@ You can also configure some defaults
 * `divider_template` = "[%s]"
 * `too_many_doing` = 2 
 * `too_many_todo` = 10
+* `default_list_name_for_new_cards` = (none) -- the list `create` puts a card in when no list is named, e.g. "Triage"
 
 
 ### Trello Authorisation
@@ -69,8 +70,42 @@ You can also read more at https://github.com/jeremytregunna/ruby-trello
 
 ## Usage
 
-* bin/trello/health
-trello/health
+`bin/trello_tool help` lists every command and `bin/trello_tool help COMMAND` its options. Boards default to
+`main_board_url`; cards are given by id or url; lists, labels and checklists by name.
+
+The board:
+
+* `bin/trello_tool health` -- checks whether the main board is "healthy"
+* `bin/trello_tool lists (BOARD_URL)` -- the lists of a board
+* `bin/trello_tool release (VERSION)`, `archive`, `archive_last (N)` -- rename "next version" on release, and
+  move old version lists to the archive board
+
+Reading cards:
+
+* `bin/trello_tool card CARD` -- one card as json (title, description, url, checklists, attachment urls)
+* `bin/trello_tool search QUERY (BOARD_URL) (--json)` -- the unarchived cards matching a trello search, grouped by
+  list. The query is trello's own, so `label:bug`, `list:"TO DO"` and the like work, and the last word matches as
+  a prefix
+* `bin/trello_tool cards (BOARD_URL) (--json)` -- every unarchived card in the board, grouped by list
+* `bin/trello_tool summarize_as_md`, `summarize_as_md_long`, `summarize_as_urls (LIST_NAME (BOARD_URL))` -- the
+  cards of one list
+
+Changing cards:
+
+* `bin/trello_tool comment CARD "text"` or `--file notes.md` -- adds a comment
+* `bin/trello_tool create (LIST_NAME (BOARD_URL)) --title "…" (--desc "…" | --desc-file card.md) (--label bug …)
+  (--top) (--force)` -- creates a card and prints it as json. Without LIST_NAME it goes in
+  `default_list_name_for_new_cards`. It first searches for an unarchived card with the same title and stops with
+  that card's url if there is one (`--force` creates another; trello's search can lag a few seconds behind a card
+  that was only just created)
+* `bin/trello_tool checklist CARD NAME --items "first" "second" (--checked)` -- adds the items to the card's
+  checklist of that name, creating the checklist if need be and skipping items already there
+* `bin/trello_tool check CARD "item text" (--checklist NAME) (--uncheck)` -- ticks (or unticks) the item with that
+  text, or the only item containing it
+* `bin/trello_tool move CARD (LIST_NAME (BOARD_URL)) (--top | --bottom)` -- to the bottom (or top) of a list; without
+  LIST_NAME, to the top or bottom of the list the card is in
+
+A command that can't do what it was asked says why and exits non-zero.
 
 ## Development
 

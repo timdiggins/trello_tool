@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+* added `search` and `cards` (find cards in a board; markdown or `--json`)
+* added `comment`, `create`, `checklist`, `check` and `move` (change cards), and the
+  `default_list_name_for_new_cards` configuration key for `create`
+* commands that fail now exit non-zero
+
 ## [0.3.0] - 2026-09-04
 
 * added `summarize_as_md_long`

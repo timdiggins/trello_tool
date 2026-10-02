@@ -18,7 +18,8 @@ module TrelloTool
       version_template: "v%s",
       divider_template: "[%s]",
       too_many_doing: 2,
-      too_many_todo: 10
+      too_many_todo: 10,
+      default_list_name_for_new_cards: nil
     }.freeze
   end
   Configuration = Struct.new(*DefaultConfiguration::DEFAULTS.keys, keyword_init: true) do
@@ -33,7 +34,7 @@ module TrelloTool
     # generates a file based on current settings
     def generate
       File.open(config_file, "w") do |f|
-        Psych.dump(to_h { |k, v| [k.to_s, v] }, f) # rubocop:disable Style/HashTransformKeys doesn't work
+        Psych.dump(to_h { |k, v| [k.to_s, v] }, f)
       end
     end
 

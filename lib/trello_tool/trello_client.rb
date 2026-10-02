@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "trello"
 require "trello_tool/util"
 
@@ -7,6 +8,7 @@ module TrelloTool
   # Wrapped client for trello adapting it to things we need it to do
   class TrelloClient < SimpleDelegator
     include TrelloTool::Util
+
     attr_reader :client, :configuration
 
     # @param configuration[TrelloTool::Configuration]
@@ -58,6 +60,50 @@ module TrelloTool
     # @return [Trello::Card]
     def find_card(card_id)
       client.find(:cards, card_id)
+    end
+
+    # @return [Trello::Board]
+    def find_board(board_url)
+      client.find(:boards, extract_id_from_url(board_url))
+    end
+
+    # the card fields the listing commands need, as trello names them
+    CARD_FIELDS = "name,url,idList,labels,closed"
+
+    # Unarchived cards of a board matching a trello search (operators such as label: and list: work, and the
+    # last word matches as a prefix)
+    # @return [Array<Hash>] cards as trello returns them: "name", "url", "idList", "labels"
+    def search_cards(board, query, limit: 50)
+      response = client.get("/search", "query" => query, "idBoards" => board.id, "modelTypes" => "cards",
+                                       "cards_limit" => limit.to_s, "card_fields" => CARD_FIELDS, "partial" => "true")
+      JSON.parse(response.body).fetch("cards", []).reject { |card| card["closed"] }
+    end
+
+    # Every unarchived card in an unarchived list of a board, in one request
+    # @return [Array<Hash>] as #search_cards
+    def open_cards(board)
+      JSON.parse(client.get("/boards/#{board.id}/cards/visible", "fields" => CARD_FIELDS).body)
+    end
+
+    # @param list [Trello::List]
+    # @return [Hash] the new card as trello returns it ("id", "url"...)
+    def create_card(list, title:, description: "", top: false, label_ids: [])
+      body = { name: title, desc: description, idList: list.id, pos: top ? "top" : "bottom" }
+      body[:idLabels] = label_ids.join(",") if label_ids.any?
+      JSON.parse(client.post("/cards", body).body)
+    end
+
+    # @param item [Hash] a checklist's check item ("id", "name", "state")
+    def set_check_item_state(card, item, complete:)
+      client.put("/cards/#{card.id}/checkItem/#{item['id']}", state: complete ? "complete" : "incomplete")
+    end
+
+    # @param position [String] "top" or "bottom"
+    # @param list [Trello::List, nil] nil to reposition the card within its list
+    def move_card(card, position:, list: nil)
+      body = { pos: position }
+      body[:idList] = list.id if list
+      client.put("/cards/#{card.id}", body)
     end
 
     def next_version_list
