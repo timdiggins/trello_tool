@@ -1,4 +1,4 @@
-## [Unreleased]
+## [0.4.0] - 2026-10-02
 
 * added `search` and `cards` (find cards in a board; markdown or `--json`)
 * added `comment`, `create`, `checklist`, `check` and `move` (change cards), and the
