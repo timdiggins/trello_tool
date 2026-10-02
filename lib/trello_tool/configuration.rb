@@ -34,7 +34,7 @@ module TrelloTool
     # generates a file based on current settings
     def generate
       File.open(config_file, "w") do |f|
-        Psych.dump(to_h { |k, v| [k.to_s, v] }, f) # rubocop:disable Style/HashTransformKeys doesn't work
+        Psych.dump(to_h { |k, v| [k.to_s, v] }, f)
       end
     end
 

@@ -8,7 +8,7 @@ require "trello_tool/trello_client"
 require "trello_tool/util"
 
 # The thor class
-# rubocop:disable Metrics/ClassLength
+# rubocop:disable-next Metrics/ClassLength
 class TrelloToolThor < Thor
   include TrelloTool::Util
 
@@ -409,4 +409,3 @@ class TrelloToolThor < Thor
     }
   end
 end
-# rubocop:enable Metrics/ClassLength

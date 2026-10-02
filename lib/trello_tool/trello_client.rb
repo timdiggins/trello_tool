@@ -8,6 +8,7 @@ module TrelloTool
   # Wrapped client for trello adapting it to things we need it to do
   class TrelloClient < SimpleDelegator
     include TrelloTool::Util
+
     attr_reader :client, :configuration
 
     # @param configuration[TrelloTool::Configuration]
