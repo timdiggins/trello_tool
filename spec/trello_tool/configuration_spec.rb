@@ -30,7 +30,8 @@ RSpec.describe TrelloTool::Configuration do
       version_template: "v%s",
       divider_template: "[%s]",
       too_many_doing: 2,
-      too_many_todo: 10
+      too_many_todo: 10,
+      default_list_name_for_new_cards: nil
     }
   end
   let(:configured) do

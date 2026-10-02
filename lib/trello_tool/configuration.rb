@@ -18,7 +18,8 @@ module TrelloTool
       version_template: "v%s",
       divider_template: "[%s]",
       too_many_doing: 2,
-      too_many_todo: 10
+      too_many_todo: 10,
+      default_list_name_for_new_cards: nil
     }.freeze
   end
   Configuration = Struct.new(*DefaultConfiguration::DEFAULTS.keys, keyword_init: true) do
