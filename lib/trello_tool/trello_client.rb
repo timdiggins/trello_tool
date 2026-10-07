@@ -98,6 +98,17 @@ module TrelloTool
       client.put("/cards/#{card.id}/checkItem/#{item['id']}", state: complete ? "complete" : "incomplete")
     end
 
+    # @return [Trello::Member] the member the token belongs to
+    def me
+      client.find(:members, "me")
+    end
+
+    # @param card [Trello::Card]
+    # @return [Array<Trello::Member>] the members of the card's board
+    def board_members(card)
+      client.find(:boards, card.board_id).members
+    end
+
     # @param position [String] "top" or "bottom"
     # @param list [Trello::List, nil] nil to reposition the card within its list
     def move_card(card, position:, list: nil)

@@ -98,8 +98,11 @@ RSpec.describe "TrelloToolThor" do
                                                        { "id" => "i2", "name" => "write the code", "state" => "incomplete" }])
     end
     let(:card) do
-      instance_double(Trello::Card, id: "c1", name: "A card", desc: "", url: card_url, checklists: [steps], attachments: [])
+      instance_double(Trello::Card, id: "c1", name: "A card", desc: "", url: card_url, checklists: [steps], attachments: [],
+                                    board_id: "b1", member_ids: [])
     end
+    let(:tim) { instance_double(Trello::Member, id: "m1", username: "timdiggins", full_name: "Tim Diggins") }
+    let(:dom) { instance_double(Trello::Member, id: "m2", username: "dominicf", full_name: "Dominic Freeman") }
     let(:found) do
       [{ "name" => "Fix the snitch", "url" => "https://trello.com/c/one", "idList" => "l2", "labels" => [{ "name" => "bug" }] },
        { "name" => "Tidy up", "url" => "https://trello.com/c/two", "idList" => "l1", "labels" => [{ "name" => "" }] },
@@ -282,6 +285,47 @@ RSpec.describe "TrelloToolThor" do
         expect { thor.move(card_url) }.to raise_error(Thor::Error, /LIST_NAME, --top or --bottom/)
         expect { thor(top: true, bottom: true).move(card_url, "TO DO") }.to raise_error(Thor::Error, /not both/)
         expect { thor.move(card_url, "Nowhere") }.to raise_error(Thor::Error, /no list called "Nowhere"/)
+      end
+    end
+
+    describe "#add_member" do
+      before do
+        allow(client).to receive(:me).and_return(tim)
+        allow(client).to receive(:board_members).with(card).and_return([tim, dom])
+      end
+
+      it "adds me by default" do
+        expect(card).to receive(:add_member).with(tim)
+        expect { thor.add_member(card_url) }.to output("added timdiggins (Tim Diggins) to #{card_url}\n").to_stdout
+      end
+
+      it "finds a board member by username, full name, or a part of the full name only they have" do
+        expect(card).to receive(:add_member).with(dom).exactly(3).times
+        expect { thor.add_member(card_url, "DominicF") }.to output(/added dominicf/).to_stdout
+        expect { thor.add_member(card_url, "dominic freeman") }.to output(/added dominicf/).to_stdout
+        expect { thor.add_member(card_url, "Freeman") }.to output(/added dominicf/).to_stdout
+      end
+
+      it "removes with --remove" do
+        allow(card).to receive(:member_ids).and_return(%w[m1 m2])
+        expect(card).to receive(:remove_member).with(dom)
+        expect { thor(remove: true).add_member(card_url, "dominicf") }
+          .to output("removed dominicf (Dominic Freeman) from #{card_url}\n").to_stdout
+      end
+
+      it "changes nothing when the member is already on the card, or isn't there to remove" do
+        expect(card).not_to receive(:add_member)
+        expect(card).not_to receive(:remove_member)
+        allow(card).to receive(:member_ids).and_return(["m1"])
+        expect { thor.add_member(card_url) }.to output(/already a member: timdiggins/).to_stdout
+        expect { thor(remove: true).add_member(card_url, "dominicf") }.to output(/not a member: dominicf/).to_stdout
+      end
+
+      it "names the board's members when none or several match, changing nothing" do
+        expect(card).not_to receive(:add_member)
+        expect { thor.add_member(card_url, "nobody") }
+          .to raise_error(Thor::Error, /no member matching "nobody".*timdiggins \(Tim Diggins\), dominicf/)
+        expect { thor.add_member(card_url, "i") }.to raise_error(Thor::Error, /more than one member matching "i"/)
       end
     end
   end

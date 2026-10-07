@@ -273,10 +273,51 @@ class TrelloToolThor < Thor
     say "moved #{card.url} to the #{position} of #{list ? list.name.inspect : 'its list'}"
   end
 
+  desc "add_member CARD_ID_OR_URL (MEMBER) (--remove)",
+       "adds a member to a card (or with --remove takes them off): MEMBER is a username or full name of a member " \
+       "of the card's board, or \"me\" (the default), the member the token belongs to"
+  method_option :remove, type: :boolean, default: false, desc: "remove the member instead"
+
+  def add_member(card_id_or_url, member_name = "me")
+    card = client.find_card(extract_card_id(card_id_or_url))
+    member = find_member!(card, member_name)
+    on_card = Array(card.member_ids).include?(member.id)
+    who = "#{member.username} (#{member.full_name})"
+    if options[:remove]
+      card.remove_member(member) if on_card
+      say "#{on_card ? 'removed' : 'not a member:'} #{who} #{on_card ? 'from' : 'on'} #{card.url}"
+    else
+      card.add_member(member) unless on_card
+      say "#{on_card ? 'already a member:' : 'added'} #{who} #{on_card ? 'on' : 'to'} #{card.url}"
+    end
+  end
+
   private
 
   def client
     TrelloTool::TrelloClient.new(configuration)
+  end
+
+  # @return [Trello::Member] me for "me", otherwise the board member with that username or full name, or failing
+  #   that the one whose full name contains it
+  def find_member!(card, name)
+    return client.me if name.casecmp?("me")
+
+    members = client.board_members(card)
+    matches = matching_members(members, name)
+    return matches.first if matches.size == 1
+
+    problem = matches.empty? ? "no member matching" : "more than one member matching"
+    candidates = (matches.empty? ? members : matches).map { |member| "#{member.username} (#{member.full_name})" }
+    raise Thor::Error, "#{problem} #{name.inspect} on the board of #{card.url}. Members: #{candidates.join(', ')}"
+  end
+
+  # @return [Array<Trello::Member>] those whose username or full name is name, or failing that whose full name contains it
+  def matching_members(members, name)
+    exact = members.select { |member| member.username.to_s.casecmp?(name) || member.full_name.to_s.casecmp?(name) }
+    return exact if exact.any?
+
+    members.select { |member| member.full_name.to_s.downcase.include?(name.downcase) }
   end
 
   # @param cards [Array<Hash>] as trello returns them ("name", "url", "idList", "labels"); cards whose list is
