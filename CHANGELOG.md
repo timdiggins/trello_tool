@@ -1,3 +1,7 @@
+## [0.5.0] - 2026-10-07
+
+* added `add_member` (a board member by username or full name, or "me" by default; `--remove` to reverse)
+
 ## [0.4.0] - 2026-10-02
 
 * added `search` and `cards` (find cards in a board; markdown or `--json`)

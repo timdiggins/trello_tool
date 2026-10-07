@@ -104,6 +104,9 @@ Changing cards:
   text, or the only item containing it
 * `bin/trello_tool move CARD (LIST_NAME (BOARD_URL)) (--top | --bottom)` -- to the bottom (or top) of a list; without
   LIST_NAME, to the top or bottom of the list the card is in
+* `bin/trello_tool add_member CARD (MEMBER) (--remove)` -- adds a member of the card's board to the card (or with
+  `--remove` takes them off). MEMBER is a username or full name (or a part of the full name only one member has);
+  without it, "me", the member the token belongs to. Already there / not there is reported, not an error
 
 A command that can't do what it was asked says why and exits non-zero.
 
