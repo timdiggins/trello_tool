@@ -107,7 +107,7 @@ RSpec.describe "TrelloToolThor" do
     end
     let(:card_url) { "https://trello.com/c/aBcD1234/1-a-card" }
     let(:steps) do
-      instance_double(Trello::Checklist, name: "Steps",
+      instance_double(Trello::Checklist, id: "cl1", name: "Steps",
                                          check_items: [{ "id" => "i1", "name" => "write the specs", "state" => "incomplete" },
                                                        { "id" => "i2", "name" => "write the code", "state" => "incomplete" }])
     end
@@ -413,6 +413,20 @@ RSpec.describe "TrelloToolThor" do
         expect(client).not_to receive(:rename_check_item)
         expect { thor.rename_item(card_url, "specs", " ") }.to raise_error(Thor::Error, /new text is empty/)
         expect { thor.rename_item(card_url, "write", "x") }.to raise_error(Thor::Error, /more than one item matching/)
+      end
+    end
+
+    describe "#rename_checklist" do
+      it "renames the checklist of that name" do
+        expect(client).to receive(:rename_checklist).with(steps, name: "2026-10-09_plan")
+        expect { thor.rename_checklist(card_url, "Steps", "2026-10-09_plan") }
+          .to output(%(renamed checklist "Steps" to "2026-10-09_plan" on #{card_url}\n)).to_stdout
+      end
+
+      it "refuses an empty new name, and names the checklists when there is none of that name" do
+        expect(client).not_to receive(:rename_checklist)
+        expect { thor.rename_checklist(card_url, "Steps", " ") }.to raise_error(Thor::Error, /new name is empty/)
+        expect { thor.rename_checklist(card_url, "Deploy", "x") }.to raise_error(Thor::Error, /no checklist called "Deploy".*"Steps"/)
       end
     end
 

@@ -105,6 +105,7 @@ Changing cards:
   text, or the only item containing it
 * `bin/trello_tool rename_item CARD "item text" "new text" (--checklist NAME)` -- renames the item with that
   text, or the only item containing it
+* `bin/trello_tool rename_checklist CARD "Name" "New name"` -- renames the card's checklist of that name
 * `bin/trello_tool remove_item CARD "item text" (--checklist NAME)` -- deletes that item. The one command that
   destroys something, so keep it behind a prompt where agents run the tool
 * `bin/trello_tool move CARD (LIST_NAME (BOARD_URL)) (--top | --bottom)` -- to the bottom (or top) of a list; without
