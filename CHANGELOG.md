@@ -1,3 +1,7 @@
+## [0.7.0] - 2026-10-15
+
+* added `rename_checklist`
+
 ## [0.6.0] - 2026-10-14
 
 * `card` also prints the card's list, members, labels and comments

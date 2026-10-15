@@ -350,6 +350,22 @@ class TrelloToolThor < Thor
     say "removed #{item['name'].inspect} from #{card.url}"
   end
 
+  desc "rename_checklist CARD_ID_OR_URL NAME NEW_NAME", "renames the card's checklist of that name"
+
+  def rename_checklist(card_id_or_url, name, new_name)
+    raise Thor::Error, "the new name is empty" if new_name.to_s.strip.empty?
+
+    card = client.find_card(extract_card_id(card_id_or_url))
+    checklist = card.checklists.detect { |candidate| candidate.name == name }
+    unless checklist
+      raise Thor::Error, "no checklist called #{name.inspect} on #{card.url}. " \
+                         "Checklists: #{card.checklists.map { |candidate| candidate.name.inspect }.join(', ')}"
+    end
+
+    client.rename_checklist(checklist, name: new_name)
+    say "renamed checklist #{name.inspect} to #{new_name.inspect} on #{card.url}"
+  end
+
   private
 
   # @param present [Array<Trello::Label>] labels the card already had

@@ -108,6 +108,11 @@ module TrelloTool
       client.delete("/cards/#{card.id}/checkItem/#{item['id']}")
     end
 
+    # @param checklist [Trello::Checklist]
+    def rename_checklist(checklist, name:)
+      client.put("/checklists/#{checklist.id}", name: name)
+    end
+
     # @return [Trello::Member] the member the token belongs to
     def me
       client.find(:members, "me")
@@ -125,12 +130,13 @@ module TrelloTool
       board_of(card).members
     end
 
+    COMMENT_PARAMS = { "filter" => "commentCard", "fields" => "data,date", "memberCreator" => "true",
+                       "memberCreator_fields" => "username" }.freeze
+
     # @param card [Trello::Card]
     # @return [Array<Hash>] the card's comments, oldest first: author (username), date, text
     def card_comments(card)
-      response = client.get("/cards/#{card.id}/actions", "filter" => "commentCard", "fields" => "data,date",
-                                                         "memberCreator" => "true", "memberCreator_fields" => "username")
-      JSON.parse(response.body).reverse.map do |action|
+      JSON.parse(client.get("/cards/#{card.id}/actions", COMMENT_PARAMS).body).reverse.map do |action|
         { author: action.dig("memberCreator", "username"), date: action["date"], text: action.dig("data", "text") }
       end
     end
