@@ -98,15 +98,41 @@ module TrelloTool
       client.put("/cards/#{card.id}/checkItem/#{item['id']}", state: complete ? "complete" : "incomplete")
     end
 
+    # @param item [Hash] a checklist's check item ("id", "name", "state")
+    def rename_check_item(card, item, name:)
+      client.put("/cards/#{card.id}/checkItem/#{item['id']}", name: name)
+    end
+
+    # @param item [Hash] a checklist's check item ("id", "name", "state")
+    def remove_check_item(card, item)
+      client.delete("/cards/#{card.id}/checkItem/#{item['id']}")
+    end
+
     # @return [Trello::Member] the member the token belongs to
     def me
       client.find(:members, "me")
     end
 
     # @param card [Trello::Card]
+    # @return [Trello::Board]
+    def board_of(card)
+      client.find(:boards, card.board_id)
+    end
+
+    # @param card [Trello::Card]
     # @return [Array<Trello::Member>] the members of the card's board
     def board_members(card)
-      client.find(:boards, card.board_id).members
+      board_of(card).members
+    end
+
+    # @param card [Trello::Card]
+    # @return [Array<Hash>] the card's comments, oldest first: author (username), date, text
+    def card_comments(card)
+      response = client.get("/cards/#{card.id}/actions", "filter" => "commentCard", "fields" => "data,date",
+                                                         "memberCreator" => "true", "memberCreator_fields" => "username")
+      JSON.parse(response.body).reverse.map do |action|
+        { author: action.dig("memberCreator", "username"), date: action["date"], text: action.dig("data", "text") }
+      end
     end
 
     # @param position [String] "top" or "bottom"

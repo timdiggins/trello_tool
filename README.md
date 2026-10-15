@@ -82,7 +82,8 @@ The board:
 
 Reading cards:
 
-* `bin/trello_tool card CARD` -- one card as json (title, description, url, checklists, attachment urls)
+* `bin/trello_tool card CARD` -- one card as json (title, description, url, list, members, labels, checklists,
+  attachment urls, comments oldest first)
 * `bin/trello_tool search QUERY (BOARD_URL) (--json)` -- the unarchived cards matching a trello search, grouped by
   list. The query is trello's own, so `label:bug`, `list:"TO DO"` and the like work, and the last word matches as
   a prefix
@@ -102,8 +103,15 @@ Changing cards:
   checklist of that name, creating the checklist if need be and skipping items already there
 * `bin/trello_tool check CARD "item text" (--checklist NAME) (--uncheck)` -- ticks (or unticks) the item with that
   text, or the only item containing it
+* `bin/trello_tool rename_item CARD "item text" "new text" (--checklist NAME)` -- renames the item with that
+  text, or the only item containing it
+* `bin/trello_tool remove_item CARD "item text" (--checklist NAME)` -- deletes that item. The one command that
+  destroys something, so keep it behind a prompt where agents run the tool
 * `bin/trello_tool move CARD (LIST_NAME (BOARD_URL)) (--top | --bottom)` -- to the bottom (or top) of a list; without
-  LIST_NAME, to the top or bottom of the list the card is in
+  LIST_NAME, to the top or bottom of the list the card is in. A card already in LIST_NAME is left alone
+* `bin/trello_tool label CARD NAME …` -- adds labels of the card's board to the card; ones already on it are reported
+* `bin/trello_tool attach CARD URL_OR_PATH (--name "…")` -- attaches a link, or uploads the file at that path. A
+  link already attached is reported, not added again
 * `bin/trello_tool add_member CARD (MEMBER) (--remove)` -- adds a member of the card's board to the card (or with
   `--remove` takes them off). MEMBER is a username or full name (or a part of the full name only one member has);
   without it, "me", the member the token belongs to. Already there / not there is reported, not an error

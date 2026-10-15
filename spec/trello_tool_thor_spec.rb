@@ -41,12 +41,17 @@ RSpec.describe "TrelloToolThor" do
     let(:card) do
       instance_double(Trello::Card, name: "A card", desc: "Some description",
                                     url: "https://trello.com/c/aBcD1234/1-a-card",
-                                    checklists: checklists, attachments: attachments)
+                                    checklists: checklists, attachments: attachments,
+                                    list: instance_double(Trello::List, name: "TO DO"),
+                                    members: [instance_double(Trello::Member, username: "timdiggins", full_name: "Tim Diggins")],
+                                    labels: [instance_double(Trello::Label, name: "bug")])
     end
+    let(:comments) { [{ author: "timdiggins", date: "2026-10-07T10:00:00.000Z", text: "Claude writes: done" }] }
 
     before do
       allow(subject).to receive(:client).and_return(client)
       allow(client).to receive(:find_card).with("aBcD1234").and_return(card)
+      allow(client).to receive(:card_comments).with(card).and_return(comments)
     end
 
     def output_of_card(card_id)
@@ -78,6 +83,15 @@ RSpec.describe "TrelloToolThor" do
       expect(JSON.parse(output_of_card("aBcD1234"))["attachment_urls"]).to eq(["https://example.com/doc.pdf"])
     end
 
+    it "outputs the list, members, labels and comments" do
+      expect(JSON.parse(output_of_card("aBcD1234"))).to include(
+        "list" => "TO DO",
+        "members" => ["timdiggins (Tim Diggins)"],
+        "labels" => ["bug"],
+        "comments" => [{ "author" => "timdiggins", "date" => "2026-10-07T10:00:00.000Z", "text" => "Claude writes: done" }]
+      )
+    end
+
     it "accepts a card url instead of an id" do
       expect(JSON.parse(output_of_card("https://trello.com/c/aBcD1234/1-a-card"))).to include("title" => "A card")
     end
@@ -99,7 +113,7 @@ RSpec.describe "TrelloToolThor" do
     end
     let(:card) do
       instance_double(Trello::Card, id: "c1", name: "A card", desc: "", url: card_url, checklists: [steps], attachments: [],
-                                    board_id: "b1", member_ids: [])
+                                    board_id: "b1", list_id: "l1", list: triage, member_ids: [], members: [], labels: [])
     end
     let(:tim) { instance_double(Trello::Member, id: "m1", username: "timdiggins", full_name: "Tim Diggins") }
     let(:dom) { instance_double(Trello::Member, id: "m2", username: "dominicf", full_name: "Dominic Freeman") }
@@ -112,6 +126,7 @@ RSpec.describe "TrelloToolThor" do
     before do
       allow(client).to receive(:find_board).and_return(board)
       allow(client).to receive(:find_card).with("aBcD1234").and_return(card)
+      allow(client).to receive(:card_comments).and_return([])
     end
 
     def thor(options = {})
@@ -271,13 +286,18 @@ RSpec.describe "TrelloToolThor" do
       end
 
       it "moves it to the top with --top" do
-        expect(client).to receive(:move_card).with(card, position: "top", list: triage)
-        expect { thor(top: true).move(card_url, "Triage") }.to output(/to the top of "Triage"/).to_stdout
+        expect(client).to receive(:move_card).with(card, position: "top", list: todo)
+        expect { thor(top: true).move(card_url, "TO DO") }.to output(/to the top of "TO DO"/).to_stdout
       end
 
       it "repositions within the card's own list when no list is named" do
         expect(client).to receive(:move_card).with(card, position: "top", list: nil)
         expect { thor(top: true).move(card_url) }.to output(/to the top of its list/).to_stdout
+      end
+
+      it "leaves a card that is already in the named list alone" do
+        expect(client).not_to receive(:move_card)
+        expect { thor.move(card_url, "Triage") }.to output(%(already in "Triage": #{card_url}\n)).to_stdout
       end
 
       it "needs a list or a position, not both positions, and a list that exists" do
@@ -326,6 +346,85 @@ RSpec.describe "TrelloToolThor" do
         expect { thor.add_member(card_url, "nobody") }
           .to raise_error(Thor::Error, /no member matching "nobody".*timdiggins \(Tim Diggins\), dominicf/)
         expect { thor.add_member(card_url, "i") }.to raise_error(Thor::Error, /more than one member matching "i"/)
+      end
+    end
+
+    describe "#label" do
+      let(:claude) { instance_double(Trello::Label, id: "lab2", name: "✨ Claude") }
+
+      before do
+        allow(board).to receive(:labels).and_return([bug, claude])
+        allow(client).to receive(:board_of).with(card).and_return(board)
+      end
+
+      it "adds the named labels, case-insensitively" do
+        expect(card).to receive(:add_label).with(bug)
+        expect(card).to receive(:add_label).with(claude)
+        expect { thor.label(card_url, "Bug", "✨ claude") }.to output("labelled #{card_url} with bug, ✨ Claude\n").to_stdout
+      end
+
+      it "reports a label already on the card instead of adding it again" do
+        allow(card).to receive(:labels).and_return([bug])
+        expect(card).to receive(:add_label).with(claude)
+        expect(card).not_to receive(:add_label).with(bug)
+        expect { thor.label(card_url, "bug", "✨ Claude") }
+          .to output("labelled #{card_url} with ✨ Claude\nalready labelled bug: #{card_url}\n").to_stdout
+      end
+
+      it "needs a name, and names the board's labels for an unknown one, changing nothing" do
+        expect(card).not_to receive(:add_label)
+        expect { thor.label(card_url) }.to raise_error(Thor::Error, /at least one label/)
+        expect { thor.label(card_url, "nope") }.to raise_error(Thor::Error, /no label called "nope".*bug, ✨ Claude/)
+      end
+    end
+
+    describe "#attach" do
+      let(:pr_url) { "https://github.com/org/repo/pull/1" }
+
+      it "attaches a link" do
+        expect(card).to receive(:add_attachment).with(pr_url, "")
+        expect { thor.attach(card_url, pr_url) }.to output("attached #{pr_url} to #{card_url}\n").to_stdout
+      end
+
+      it "reports a link that is already attached instead of adding it again" do
+        allow(card).to receive(:attachments).and_return([instance_double(Trello::Attachment, url: pr_url)])
+        expect(card).not_to receive(:add_attachment)
+        expect { thor.attach(card_url, pr_url) }.to output("already attached: #{pr_url} on #{card_url}\n").to_stdout
+      end
+
+      it "uploads a file, with --name, and prints the attachment's url" do
+        path = File.join(@target_dir, "shot.png")
+        File.write(path, "png")
+        response = instance_double(Trello::Response, body: '{"url":"https://trello.com/1/cards/c1/attachments/a1/download/shot.png"}')
+        expect(card).to receive(:add_attachment).with(an_instance_of(File), "the screenshot").and_return(response)
+        expect { thor(name: "the screenshot").attach(card_url, path) }
+          .to output(%r{attached shot.png to #{card_url}: https://trello.com/1/cards/c1/attachments/a1/download/shot.png}).to_stdout
+      end
+    end
+
+    describe "#rename_item" do
+      it "renames the item with that text" do
+        expect(client).to receive(:rename_check_item).with(card, hash_including("id" => "i2"), name: "write the app")
+        expect { thor.rename_item(card_url, "the code", "write the app") }
+          .to output(%(renamed "write the code" to "write the app" on #{card_url}\n)).to_stdout
+      end
+
+      it "refuses an empty new text, and an ambiguous item, changing nothing" do
+        expect(client).not_to receive(:rename_check_item)
+        expect { thor.rename_item(card_url, "specs", " ") }.to raise_error(Thor::Error, /new text is empty/)
+        expect { thor.rename_item(card_url, "write", "x") }.to raise_error(Thor::Error, /more than one item matching/)
+      end
+    end
+
+    describe "#remove_item" do
+      it "deletes the item with that text" do
+        expect(client).to receive(:remove_check_item).with(card, hash_including("id" => "i1"))
+        expect { thor.remove_item(card_url, "specs") }.to output(%(removed "write the specs" from #{card_url}\n)).to_stdout
+      end
+
+      it "looks only in the named checklist, changing nothing when it isn't there" do
+        expect(client).not_to receive(:remove_check_item)
+        expect { thor(checklist: "Deploy").remove_item(card_url, "specs") }.to raise_error(Thor::Error, /no checklist called "Deploy"/)
       end
     end
   end
