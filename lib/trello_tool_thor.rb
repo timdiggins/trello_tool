@@ -96,7 +96,7 @@ class TrelloToolThor < Thor
   end
 
   desc "card CARD_ID_OR_URL",
-       "prints out a card as json (title, description, url, checklists, attachment urls)"
+       "prints out a card as json (title, description, url, list, members, labels, checklists, attachment urls, comments)"
 
   def card(card_id_or_url)
     card = client.find_card(extract_card_id(card_id_or_url))
@@ -269,6 +269,8 @@ class TrelloToolThor < Thor
     position = position_option!(list_name)
     card = client.find_card(extract_card_id(card_id_or_url))
     list = find_list!(client.find_board(url), list_name) if list_name
+    return say("already in #{list.name.inspect}: #{card.url}") if list && card.list_id == list.id
+
     client.move_card(card, position: position, list: list)
     say "moved #{card.url} to the #{position} of #{list ? list.name.inspect : 'its list'}"
   end
@@ -292,7 +294,78 @@ class TrelloToolThor < Thor
     end
   end
 
+  desc "label CARD_ID_OR_URL NAME ...", "adds labels of the card's board to a card; labels already on it are reported, not errors"
+
+  def label(card_id_or_url, *names)
+    raise Thor::Error, "give at least one label name" if names.empty?
+
+    card = client.find_card(extract_card_id(card_id_or_url))
+    labels = find_labels!(client.board_of(card), names)
+    on_card_ids = card.labels.map(&:id)
+    present, missing = labels.partition { |label| on_card_ids.include?(label.id) }
+    missing.each { |label| card.add_label(label) }
+    say_labelled(card, present, missing)
+  end
+
+  desc "attach CARD_ID_OR_URL URL_OR_PATH (--name TEXT)",
+       "attaches a link to a card, or uploads a file when URL_OR_PATH is an existing file; " \
+       "a link already attached is reported, not added again"
+  method_option :name, type: :string, default: "", desc: "a name for the attachment"
+
+  def attach(card_id_or_url, url_or_path)
+    card = client.find_card(extract_card_id(card_id_or_url))
+    name = options[:name].to_s
+    if File.file?(url_or_path)
+      response = File.open(url_or_path) { |file| card.add_attachment(file, name) }
+      say "attached #{File.basename(url_or_path)} to #{card.url}: #{attachment_url(response)}"
+    elsif card.attachments.any? { |attachment| attachment.url == url_or_path }
+      say "already attached: #{url_or_path} on #{card.url}"
+    else
+      card.add_attachment(url_or_path, name)
+      say "attached #{url_or_path} to #{card.url}"
+    end
+  end
+
+  desc "rename_item CARD_ID_OR_URL ITEM_TEXT NEW_TEXT (--checklist NAME)",
+       "renames the checklist item with that text (the whole text, or a part only it has)"
+  method_option :checklist, type: :string, desc: "only look in the checklist of this name"
+
+  def rename_item(card_id_or_url, item_text, new_text)
+    raise Thor::Error, "the new text is empty" if new_text.to_s.strip.empty?
+
+    card = client.find_card(extract_card_id(card_id_or_url))
+    item = find_check_item!(card, item_text)
+    client.rename_check_item(card, item, name: new_text)
+    say "renamed #{item['name'].inspect} to #{new_text.inspect} on #{card.url}"
+  end
+
+  desc "remove_item CARD_ID_OR_URL ITEM_TEXT (--checklist NAME)",
+       "deletes the checklist item with that text (the whole text, or a part only it has)"
+  method_option :checklist, type: :string, desc: "only look in the checklist of this name"
+
+  def remove_item(card_id_or_url, item_text)
+    card = client.find_card(extract_card_id(card_id_or_url))
+    item = find_check_item!(card, item_text)
+    client.remove_check_item(card, item)
+    say "removed #{item['name'].inspect} from #{card.url}"
+  end
+
   private
+
+  # @param present [Array<Trello::Label>] labels the card already had
+  # @param missing [Array<Trello::Label>] labels just added
+  def say_labelled(card, present, missing)
+    say "labelled #{card.url} with #{missing.map(&:name).join(', ')}" if missing.any?
+    say "already labelled #{present.map(&:name).join(', ')}: #{card.url}" if present.any?
+  end
+
+  # @param response [Trello::Response]
+  # @return [String, nil] the url of the attachment trello created
+  def attachment_url(response)
+    JSON.parse(response.body)["url"]
+  rescue JSON::ParserError, NoMethodError, TypeError
+    nil
+  end
 
   def client
     TrelloTool::TrelloClient.new(configuration)
@@ -379,13 +452,18 @@ class TrelloToolThor < Thor
   end
 
   def label_ids!(board, names)
+    find_labels!(board, names).map(&:id)
+  end
+
+  # @return [Array<Trello::Label>] the board's labels with those names (case-insensitively)
+  def find_labels!(board, names)
     return [] if names.empty?
 
     labels = board.labels
     names.map do |name|
-      label = labels.detect { |candidate| candidate.name.to_s.casecmp?(name) }
-      label&.id || raise(Thor::Error, "no label called #{name.inspect} in #{board.name}. " \
-                                      "Labels: #{labels.map { |candidate| candidate.name.to_s }.reject(&:empty?).join(', ')}")
+      labels.detect { |candidate| candidate.name.to_s.casecmp?(name) } ||
+        raise(Thor::Error, "no label called #{name.inspect} in #{board.name}. " \
+                           "Labels: #{labels.map { |candidate| candidate.name.to_s }.reject(&:empty?).join(', ')}")
     end
   end
 
@@ -434,8 +512,12 @@ class TrelloToolThor < Thor
       title: card.name,
       description: card.desc,
       url: card.url,
+      list: card.list.name,
+      members: card.members.map { |member| "#{member.username} (#{member.full_name})" },
+      labels: card.labels.map(&:name),
       checklists: card.checklists.map { |checklist| checklist_as_hash(checklist) },
-      attachment_urls: card.attachments.map(&:url)
+      attachment_urls: card.attachments.map(&:url),
+      comments: client.card_comments(card)
     }
   end
 

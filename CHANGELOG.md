@@ -1,3 +1,10 @@
+## [0.6.0] - 2026-10-14
+
+* `card` also prints the card's list, members, labels and comments
+* `move` into the list the card is already in changes nothing
+* added `label` (adds labels to an existing card), `attach` (a link, or a file upload),
+  `rename_item` and `remove_item` (a checklist item)
+
 ## [0.5.0] - 2026-10-07
 
 * added `add_member` (a board member by username or full name, or "me" by default; `--remove` to reverse)
